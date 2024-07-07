@@ -1,0 +1,38 @@
+# main.py
+import torch
+from transformers import BertTokenizer, BertForQuestionAnswering
+
+def initialize_model():
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    model = BertForQuestionAnswering.from_pretrained('bert-base-uncased')
+    return tokenizer, model 
+
+def process_input(question, context):
+    # Tokenize input question and context
+    inputs = tokenizer(question, return_tensors='pt')
+    return inputs
+
+def generate_response(inputs, model):
+    # Perform inference using the model
+    outputs = model(**inputs)
+    answer_start_scores = outputs.start_logits
+    answer_end_scores = outputs.end_logits
+
+    # Get the most likely answer
+    answer_start = torch.argmax(answer_start_scores)
+    answer_end = torch.argmax(answer_end_scores) + 1
+    answer = tokenizer.decode(inputs['input_ids'][0, answer_start:answer_end])
+    return answer
+
+if __name__ == "__main__":
+    tokenizer, model = initialize_model()
+
+    while True:
+        
+        question = input("Question: ")
+        context = input("Context: ")
+        
+        inputs = process_input(question, context)
+        answer = generate_response(inputs, model)
+        
+        print("Answer:", answer)
